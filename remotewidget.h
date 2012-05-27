@@ -10,6 +10,7 @@
 #include "udpSender.h"
 #include "QBoardView.h"
 #include <QProcess>
+#include <QLineEdit>
 
 namespace Ui {
     class RemoteWidget;
@@ -31,6 +32,7 @@ public:
 private slots:
     void autoManualButtonClicked();
     void packetReceivedUpdateUI(QString completeCommand);
+    void startListening();
 
 public slots:
     void handleMoteResponse();
@@ -55,6 +57,9 @@ private:
     QBoardView          *board;
     QVBoxLayout         *vboxLayout;
     QProcess            *myProcess;
+    QLabel              *deviceName;
+    QLineEdit           *deviceNameInput;
+    QPushButton         *setDeviceButton;
 
 
 };

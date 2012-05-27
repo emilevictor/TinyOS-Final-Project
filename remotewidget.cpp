@@ -7,6 +7,30 @@
 #include <QVBoxLayout>
 #include <QTimer>
 #include <QProcess>
+#include <QDebug>
+
+/*
+  Notes on getting this program to connect to mote via telnet.
+
+  You need to go to /home/user/local/src/tinyos-2.x/support/sdk/cpp/sf
+
+  ./sf control_port 9003
+  then in that terminal type:
+
+  start 9004 /dev/ttyUSB2 57600
+
+  ** at this point, if you specified the right port it should be ready to receive packets
+
+  In this program:
+
+  telnet localhost 9004
+
+  then type "U " to start the stream
+
+
+
+
+  */
 
 
 RemoteWidget::RemoteWidget(QWidget *parent) :
@@ -41,13 +65,27 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     controlGridLayout->addWidget(pbRight,1,2);
 
     pbLeft = new QPushButton(this);
-    pbLeft->setText("Right");
+    pbLeft->setText("Left");
     controlGridLayout->addWidget(pbLeft,1,0);
+
+    deviceName = new QLabel(this);
+    deviceName->setText("Device port:");
+    controlGridLayout->addWidget(deviceName,3,0);
+
+    deviceNameInput = new QLineEdit(this);
+    deviceNameInput->setText("9004");
+    controlGridLayout->addWidget(deviceNameInput,3,1);
+
+    setDeviceButton = new QPushButton(this);
+    setDeviceButton->setText("Start listening");
+    controlGridLayout->addWidget(setDeviceButton,3,2);
+
+    connect(setDeviceButton,SIGNAL(clicked()), this, SLOT(startListening()));
 
 
     /*** BOARD ***/
     QTimer *timer = new QTimer(this);
-    timer->setInterval(50);
+    timer->setInterval(400);
     timer->start();
     board = new QBoardView(this);
     connect(timer, SIGNAL(timeout()), board, SLOT(updateBoardColours()));
@@ -55,22 +93,20 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     vboxLayout->addLayout(controlGridLayout);
     vboxLayout->addWidget(board);
 
-    //QString program = "/usr/bin/java";
-    QString program = "java";
+//    //QString program = "/usr/bin/java";
+//    QString program = "java";
 
-    QStringList arguments;
+//    QStringList arguments;
 
-    arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar" << "net.tinyos.tools.PrintfClient" << "-comm" << "serial@/dev/ttyUSB1:iris";
-    myProcess = new QProcess(parent);
-    myProcess->setProcessChannelMode(QProcess::ForwardedChannels);
-    myProcess->start(program, arguments);
-    connect(myProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));
-
-
+//    arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar" << "net.tinyos.tools.PrintfClient" << "-comm" << "serial@/dev/ttyUSB1:iris";
+//    myProcess = new QProcess(parent);
+//    //myProcess->setProcessChannelMode(QProcess::ForwardedChannels);
+//    myProcess->start(program, arguments);
+//    connect(myProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));
 
 
-
-    /*port = new QextSerialPort(QLatin1String("/dev/ttyUSB1"), QextSerialPort::EventDriven);
+    /*
+    port = new QextSerialPort(QLatin1String("/dev/ttyUSB1"), QextSerialPort::EventDriven);
 
     port->setBaudRate(BAUD57600);
     port->setFlowControl(FLOW_OFF);
@@ -106,11 +142,50 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
 }
 
 void RemoteWidget::handleMoteResponse(){
-    qDebug() << "I have issues";
-    qDebug() << myProcess->readLine() << "<-- received line";
-    //qDebug() << myProcess->readAll() << "<-- output from program";
+    if (myProcess->canReadLine())
+    {
+        //QString lastLine = myProcess->readAll();
+        //lastLine.remove(0,15);
+
+        //ERROR: only outputting "$ on every line.
+
+        QString receivedResponse = myProcess->readAllStandardOutput();
+
+        receivedResponse.remove(0,1);
+
+        qDebug() << receivedResponse;
+        //qDebug() << lastLine << "<-- received line";
+        //qDebug() << myProcess->readAll() << "<-- output from program";
+    }
 }
 
+void RemoteWidget::startListening() {
+    /*QString program = "telnet";
+
+    QStringList arguments;
+
+    arguments << "localhost" << this->deviceNameInput->text();
+    myProcess = new QProcess(this);
+    //myProcess->setProcessChannelMode(QProcess::ForwardedChannels);
+    myProcess->setProcessChannelMode(QProcess::MergedChannels);
+    myProcess->start(program, arguments);
+    QByteArray handshake = "U ";
+
+    myProcess->write(handshake);
+    connect(myProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));*/
+
+    //QString program = "/usr/bin/java";
+    QString program = "java";
+
+    QStringList arguments;
+
+    arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar" << "net.tinyos.tools.PrintfClient" << "-comm" << "serial@/dev/ttyUSB2:iris";
+    myProcess = new QProcess(this);
+    myProcess->setProcessChannelMode(QProcess::MergedChannels);
+    myProcess->start(program, arguments);
+    connect(myProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));
+
+}
 
 
 RemoteWidget::~RemoteWidget()
