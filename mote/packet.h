@@ -1,6 +1,5 @@
 /*
 * The packet definition header	
-*	
 */
 
 #ifndef PACKET_H
@@ -28,11 +27,9 @@ enum {
   AM_PACKET = 0x93
 };
 
-
-
 typedef nx_struct packet {
 	nx_uint8_t mode;
-	nx_uint8_t command;
+	nx_uint8_t cmd;
 	nx_uint16_t cmd_duration;
 	nx_uint8_t ack;
 	nx_uint8_t req_info;

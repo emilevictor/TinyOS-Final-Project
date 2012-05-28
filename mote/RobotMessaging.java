@@ -88,7 +88,7 @@ public class RobotMessaging extends net.tinyos.message.Message {
         s += "  [mode=0x"+Long.toHexString(get_mode())+"]\n";
       } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
       try {
-        s += "  [command=0x"+Long.toHexString(get_command())+"]\n";
+        s += "  [cmd=0x"+Long.toHexString(get_cmd())+"]\n";
       } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
       try {
         s += "  [cmd_duration=0x"+Long.toHexString(get_cmd_duration())+"]\n";
@@ -177,65 +177,65 @@ public class RobotMessaging extends net.tinyos.message.Message {
     }
 
     /////////////////////////////////////////////////////////
-    // Accessor methods for field: command
+    // Accessor methods for field: cmd
     //   Field type: short, unsigned
     //   Offset (bits): 8
     //   Size (bits): 8
     /////////////////////////////////////////////////////////
 
     /**
-     * Return whether the field 'command' is signed (false).
+     * Return whether the field 'cmd' is signed (false).
      */
-    public static boolean isSigned_command() {
+    public static boolean isSigned_cmd() {
         return false;
     }
 
     /**
-     * Return whether the field 'command' is an array (false).
+     * Return whether the field 'cmd' is an array (false).
      */
-    public static boolean isArray_command() {
+    public static boolean isArray_cmd() {
         return false;
     }
 
     /**
-     * Return the offset (in bytes) of the field 'command'
+     * Return the offset (in bytes) of the field 'cmd'
      */
-    public static int offset_command() {
+    public static int offset_cmd() {
         return (8 / 8);
     }
 
     /**
-     * Return the offset (in bits) of the field 'command'
+     * Return the offset (in bits) of the field 'cmd'
      */
-    public static int offsetBits_command() {
+    public static int offsetBits_cmd() {
         return 8;
     }
 
     /**
-     * Return the value (as a short) of the field 'command'
+     * Return the value (as a short) of the field 'cmd'
      */
-    public short get_command() {
-        return (short)getUIntBEElement(offsetBits_command(), 8);
+    public short get_cmd() {
+        return (short)getUIntBEElement(offsetBits_cmd(), 8);
     }
 
     /**
-     * Set the value of the field 'command'
+     * Set the value of the field 'cmd'
      */
-    public void set_command(short value) {
-        setUIntBEElement(offsetBits_command(), 8, value);
+    public void set_cmd(short value) {
+        setUIntBEElement(offsetBits_cmd(), 8, value);
     }
 
     /**
-     * Return the size, in bytes, of the field 'command'
+     * Return the size, in bytes, of the field 'cmd'
      */
-    public static int size_command() {
+    public static int size_cmd() {
         return (8 / 8);
     }
 
     /**
-     * Return the size, in bits, of the field 'command'
+     * Return the size, in bits, of the field 'cmd'
      */
-    public static int sizeBits_command() {
+    public static int sizeBits_cmd() {
         return 8;
     }
 
