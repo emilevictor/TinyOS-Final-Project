@@ -17,8 +17,6 @@
 #include <QLabel>
 #include <QGraphicsView>
 #include <QPushButton>
-#include "udpReceiver.h"
-#include "udpSender.h"
 #include "QBoardView.h"
 #include <QProcess>
 #include <QLineEdit>
@@ -44,9 +42,18 @@ private slots:
     void autoManualButtonClicked();
     void packetReceivedUpdateUI(QString completeCommand);
     void startListening();
+    void setDurationMilliseconds();
 
 public slots:
     void handleMoteResponse();
+    void sendMessage(QList<int> localCommandList);
+    void moveForwards();
+    void stopVehicle();
+    void moveBackwards();
+    void rotateAnticlockwise();
+    void rotateClockwise();
+
+
 signals:
     void commandListReceived(QList<int>);
     //crickets
@@ -57,8 +64,6 @@ private:
     QLabel*             autoOrManual;
     QLabel*             autoOrManualDynamic;
     bool                moteIsAutomatic;
-    udpReceiver         *udpR;
-    udpSender           *udpS;
 
     QPushButton         *pbForwards;
     QPushButton         *pbBackwards;
@@ -68,10 +73,16 @@ private:
     QPushButton         *pbToggleManualAuto;
     QBoardView          *board;
     QVBoxLayout         *vboxLayout;
-    QProcess            *myProcess;
-    QLabel              *deviceName;
-    QLineEdit           *deviceNameInput;
-    QPushButton         *setDeviceButton;
+    QProcess            *roboReceiverProcess;
+    QProcess            *roboSenderProcess;
+
+    QLabel              *durationText;
+    QLineEdit           *cmdDuration;
+    QPushButton         *setCmdDurationButton;
+    int                 durationMilliseconds;
+
+
+    QPushButton         *pbStartListening;
     QStringList         receivedCommandsSplit;
     QList<int>          commandList;
 

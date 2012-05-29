@@ -19,6 +19,7 @@ public class roboSender implements MessageListener
 		//System.out.println("Motes started");
 
 		//Forever, take input from stdin.
+		System.out.println("I am alive!");
 		while(true)
 		{
 			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
@@ -32,6 +33,7 @@ public class roboSender implements MessageListener
 
 			command = command.trim();
 			String[] splitCommand = command.split(" ");
+			System.out.println("Received string");	
 			if (splitCommand.length >= 8)
 			{
 				Short mode = Short.valueOf(splitCommand[0]);

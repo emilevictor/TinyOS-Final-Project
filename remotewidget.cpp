@@ -28,6 +28,8 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RemoteWidget)
 {
+
+    durationMilliseconds = 500;
     vboxLayout = new QVBoxLayout(this);
 
     moteIsAutomatic = true;
@@ -47,10 +49,6 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     pbStop->setText("Stop");
     controlGridLayout->addWidget(pbStop,1,1);
 
-    pbStop = new QPushButton(this);
-    pbStop->setText("Stop");
-    controlGridLayout->addWidget(pbStop,1,1);
-
     pbRight = new QPushButton(this);
     pbRight->setText("Right");
     controlGridLayout->addWidget(pbRight,1,2);
@@ -59,20 +57,39 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     pbLeft->setText("Left");
     controlGridLayout->addWidget(pbLeft,1,0);
 
-    /*deviceName = new QLabel(this);
-    deviceName->setText("Device port:");
-    controlGridLayout->addWidget(deviceName,3,0);*/
+    durationText = new QLabel(this);
+    durationText->setText("Command duration:");
+    controlGridLayout->addWidget(durationText,3,0);
 
-    /*deviceNameInput = new QLineEdit(this);
-    deviceNameInput->setText("9004");
-    controlGridLayout->addWidget(deviceNameInput,3,1);*/
+    setCmdDurationButton = new QPushButton(this);
+    setCmdDurationButton->setText("Set duration");
+    controlGridLayout->addWidget(setCmdDurationButton,3,2);
 
-    setDeviceButton = new QPushButton(this);
-    setDeviceButton->setText("Start listening");
-    controlGridLayout->addWidget(setDeviceButton,3,2);
+    connect(setCmdDurationButton, SIGNAL(clicked()),this,SLOT(setDurationMilliseconds()));
 
-    connect(setDeviceButton,SIGNAL(clicked()), this, SLOT(startListening()));
+    cmdDuration = new QLineEdit(this);
+    cmdDuration->setPlaceholderText("Enter in milliseconds");
+    controlGridLayout->addWidget(cmdDuration,3,1);
 
+    pbToggleManualAuto = new QPushButton(this);
+    pbToggleManualAuto->setText("Auto Mode");
+    controlGridLayout->addWidget(pbToggleManualAuto,4,1);
+    pbToggleManualAuto->setVisible(false);
+
+    pbStartListening = new QPushButton(this);
+    pbStartListening->setText("Start listening");
+    controlGridLayout->addWidget(pbStartListening,4,2);
+
+    connect(pbStartListening,SIGNAL(clicked()), this, SLOT(startListening()));
+    connect(pbToggleManualAuto,SIGNAL(clicked()),this,SLOT(autoManualButtonClicked()));
+
+    /******* Manual commands *****/
+
+    connect(pbForwards, SIGNAL(clicked()), this, SLOT(moveForwards()));
+    connect(pbBackwards,SIGNAL(clicked()), this, SLOT(moveBackwards()));
+    connect(pbLeft,SIGNAL(clicked()), this, SLOT(rotateAnticlockwise()));
+    connect(pbRight, SIGNAL(clicked()), this, SLOT(rotateClockwise()));
+    connect(pbStop, SIGNAL(clicked()), this, SLOT(stopVehicle()));
 
     /*** BOARD ***/
     QTimer *timer = new QTimer(this);
@@ -92,13 +109,21 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
 
 }
 
+void RemoteWidget::setDurationMilliseconds() {
+
+    durationMilliseconds = cmdDuration->displayText().toInt();
+    qDebug() << durationMilliseconds;
+}
+
+
+
 //Handles the responses from the java program. Splits the string,
 //converts to ints, and puts them into a global array.
 void RemoteWidget::handleMoteResponse(){
-    if (myProcess->canReadLine())
+    if (roboReceiverProcess->canReadLine())
     {
 
-        QString receivedResponse = myProcess->readLine();
+        QString receivedResponse = roboReceiverProcess->readLine();
 
         receivedResponse = receivedResponse.trimmed();
 
@@ -118,6 +143,36 @@ void RemoteWidget::handleMoteResponse(){
     }
 }
 
+/**
+  * SendMessage sends a message, and takes as input a command list.
+  * The definition for this localCommandList is seen in packet.h
+  */
+void RemoteWidget::sendMessage(QList<int> localCommandList)
+{
+    //Construct string including a newline character
+    QString sentString = "";
+    for (int i = 0; i < 8; i++)
+    {
+        sentString = sentString + QString::number(localCommandList.at(i)) + " ";
+    }
+    sentString.chop(1);
+    sentString += "\n";
+
+    //Convert it into a QByteArray*
+
+    QByteArray data = sentString.toUtf8();
+
+    roboSenderProcess->write(data);
+
+    //Then write it to stdin of roboSenderProcess
+
+}
+
+
+/**
+  * StartListening: this function will conenct to the two java programs (for sending and listening to the mote(s)).
+  *
+  */
 void RemoteWidget::startListening() {
 
     QString program = "java";
@@ -125,11 +180,20 @@ void RemoteWidget::startListening() {
     QStringList arguments;
 
     arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar:/home/user/local/src/finalQtProject/finalProject/Final/mote" << "roboTalker";
-    //arguments << "-cp" << "mote/"<< 'roboTalker';
-    myProcess = new QProcess(this);
-    myProcess->setProcessChannelMode(QProcess::MergedChannels);
-    myProcess->start(program, arguments);
-    connect(myProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));
+    roboReceiverProcess = new QProcess(this);
+    roboReceiverProcess->setProcessChannelMode(QProcess::MergedChannels);
+    roboReceiverProcess->start(program, arguments);
+    connect(roboReceiverProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));
+
+
+    arguments.clear();
+    arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar:/home/user/local/src/finalQtProject/finalProject/Final/mote" << "roboSender";
+    roboSenderProcess = new QProcess(this);
+    roboSenderProcess->setProcessChannelMode(QProcess::ForwardedChannels);
+    roboSenderProcess->start(program,arguments);
+    //No need for a readyRead() connection on this one due to forwarded channels.
+
+    pbToggleManualAuto->setVisible(true);
 
 }
 
@@ -137,24 +201,186 @@ void RemoteWidget::startListening() {
 RemoteWidget::~RemoteWidget()
 {
     delete ui;
-    delete udpR;
-    delete udpS;
+    roboReceiverProcess->terminate();
+    roboSenderProcess->terminate();
+    delete roboReceiverProcess;
+    delete roboSenderProcess;
 }
+
 
 /**
   * This slot propagates information from the auto/manual button click
   */
 void RemoteWidget::autoManualButtonClicked()
 {
+    QList<int> commandListToBeSent;
+
     if (moteIsAutomatic)
     {
         moteIsAutomatic = !moteIsAutomatic;
-        udpS->sendDatagram("MANUAL");
+
+        commandListToBeSent.append(1); //0 = auto, 1 = manual
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        sendMessage(commandListToBeSent);
+        pbToggleManualAuto->setText("Current: Manual Mode");
+
+        pbForwards->setVisible(true);
+        pbBackwards->setVisible(true);
+        pbStop->setVisible(true);
+        pbRight->setVisible(true);
+        pbLeft->setVisible(true);
+
+
     } else {
         moteIsAutomatic = !moteIsAutomatic;
-        udpS->sendDatagram("AUTO");
+        commandListToBeSent.append(0); //0 = auto, 1 = manual
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+        sendMessage(commandListToBeSent);
+        pbToggleManualAuto->setText("Current: Auto Mode");
+
+        pbForwards->setVisible(false);
+        pbBackwards->setVisible(false);
+        pbStop->setVisible(false);
+        pbRight->setVisible(false);
+        pbLeft->setVisible(false);
+
     }
 }
+
+/**
+  * Move forwards: sends a command packet to the mote to move forward for a specific amount of time.
+  *
+  */
+void RemoteWidget::moveForwards()
+{
+
+    qDebug() << "Driving forwards";
+
+    QList<int> commandListToBeSent;
+
+    //Here, we construct our command list to be sent using sendMessage.
+    commandListToBeSent.append(254); //0 = auto, 1 = manual
+    commandListToBeSent.append(0); //CMD nx_uint8_t: 0(forward) 1(clockwise) 2(backward) 3(anticlockwise) 4(stop)
+    commandListToBeSent.append(durationMilliseconds); //CMD_DURATION
+    commandListToBeSent.append(254); //ACK - we don't care
+    commandListToBeSent.append(254); //REQ_INFO - we don't care
+    commandListToBeSent.append(254); //CURRENT_X - we don't care
+    commandListToBeSent.append(254); //CURRENT_Y - we don't care
+    commandListToBeSent.append(254); //HIT_WALL - we don't care
+    sendMessage(commandListToBeSent);
+
+}
+
+/**
+  * stopVehicle: stops the vehicle
+  */
+void RemoteWidget::stopVehicle()
+{
+    qDebug() << "Stopping vehicle";
+
+
+    QList<int> commandListToBeSent;
+
+    //Here, we construct our command list to be sent using sendMessage.
+    commandListToBeSent.append(254); //0 = auto, 1 = manual
+    commandListToBeSent.append(4); //CMD nx_uint8_t: 0(forward) 1(clockwise) 2(backward) 3(anticlockwise) 4(stop)
+    commandListToBeSent.append(254); //CMD_DURATION
+    commandListToBeSent.append(254); //ACK - we don't care
+    commandListToBeSent.append(254); //REQ_INFO - we don't care
+    commandListToBeSent.append(254); //CURRENT_X - we don't care
+    commandListToBeSent.append(254); //CURRENT_Y - we don't care
+    commandListToBeSent.append(254); //HIT_WALL - we don't care
+    sendMessage(commandListToBeSent);
+
+}
+
+/**
+  * moveBackwards: reverses the vehicle
+  *
+  */
+void RemoteWidget::moveBackwards()
+{
+    qDebug() << "Reversing";
+
+
+    QList<int> commandListToBeSent;
+
+    //Here, we construct our command list to be sent using sendMessage.
+    commandListToBeSent.append(254); //0 = auto, 1 = manual
+    commandListToBeSent.append(2); //CMD nx_uint8_t: 0(forward) 1(clockwise) 2(backward) 3(anticlockwise) 4(stop)
+    commandListToBeSent.append(durationMilliseconds); //CMD_DURATION
+    commandListToBeSent.append(254); //ACK - we don't care
+    commandListToBeSent.append(254); //REQ_INFO - we don't care
+    commandListToBeSent.append(254); //CURRENT_X - we don't care
+    commandListToBeSent.append(254); //CURRENT_Y - we don't care
+    commandListToBeSent.append(254); //HIT_WALL - we don't care
+    sendMessage(commandListToBeSent);
+
+}
+
+/**
+  * rotateAnticlockwise: Rotates vehicle anticlockwise
+  *
+  */
+void RemoteWidget::rotateAnticlockwise()
+{
+    qDebug() << "Rotating anticlockwise";
+
+
+    QList<int> commandListToBeSent;
+
+    //Here, we construct our command list to be sent using sendMessage.
+    commandListToBeSent.append(254); //0 = auto, 1 = manual
+    commandListToBeSent.append(3); //CMD nx_uint8_t: 0(forward) 1(clockwise) 2(backward) 3(anticlockwise) 4(stop)
+    commandListToBeSent.append(durationMilliseconds); //CMD_DURATION
+    commandListToBeSent.append(254); //ACK - we don't care
+    commandListToBeSent.append(254); //REQ_INFO - we don't care
+    commandListToBeSent.append(254); //CURRENT_X - we don't care
+    commandListToBeSent.append(254); //CURRENT_Y - we don't care
+    commandListToBeSent.append(254); //HIT_WALL - we don't care
+    sendMessage(commandListToBeSent);
+
+}
+
+/**
+  * rotateClockwise: Rotates vehicle clockwise
+  *
+  */
+void RemoteWidget::rotateClockwise()
+{
+
+    qDebug() << "Rotating clockwise";
+
+
+    QList<int> commandListToBeSent;
+
+    //Here, we construct our command list to be sent using sendMessage.
+    commandListToBeSent.append(254); //0 = auto, 1 = manual
+    commandListToBeSent.append(1); //CMD nx_uint8_t: 0(forward) 1(clockwise) 2(backward) 3(anticlockwise) 4(stop)
+    commandListToBeSent.append(durationMilliseconds); //CMD_DURATION
+    commandListToBeSent.append(254); //ACK - we don't care
+    commandListToBeSent.append(254); //REQ_INFO - we don't care
+    commandListToBeSent.append(254); //CURRENT_X - we don't care
+    commandListToBeSent.append(254); //CURRENT_Y - we don't care
+    commandListToBeSent.append(254); //HIT_WALL - we don't care
+    sendMessage(commandListToBeSent);
+
+}
+
+
+
 
 /**
   * The packetReceivedUpdateUI(QString) function is called when the UDP receiver receives a packet. If the

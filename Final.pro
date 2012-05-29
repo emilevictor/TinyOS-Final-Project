@@ -4,21 +4,17 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT += core gui network console
 
 TARGET = Final
 TEMPLATE = app
 
 SOURCES += main.cpp\
     remotewidget.cpp \
-    udpReceiver.cpp \
-    udpSender.cpp \
     QBoardView.cpp
 
 HEADERS  += \
     remotewidget.h \
-    udpReceiver.h \
-    udpSender.h \
     QBoardView.h
 
 FORMS    += \
