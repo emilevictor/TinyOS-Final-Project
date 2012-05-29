@@ -24,3 +24,6 @@ HEADERS  += \
 FORMS    += \
     remotewidget.ui
 
+RESOURCES += \
+    resources.qrc
+

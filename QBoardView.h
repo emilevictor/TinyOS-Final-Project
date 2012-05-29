@@ -21,6 +21,7 @@ private:
 
 public slots:
     void updateBoardColours();
+    void acceptCommandList(QList<int>);
 
 
 private slots:

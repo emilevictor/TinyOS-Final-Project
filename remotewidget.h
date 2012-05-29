@@ -37,6 +37,7 @@ private slots:
 public slots:
     void handleMoteResponse();
 signals:
+    void commandListReceived(QList<int>);
     //crickets
 
 private:
@@ -60,6 +61,8 @@ private:
     QLabel              *deviceName;
     QLineEdit           *deviceNameInput;
     QPushButton         *setDeviceButton;
+    QStringList         receivedCommandsSplit;
+    QList<int>          commandList;
 
 
 };

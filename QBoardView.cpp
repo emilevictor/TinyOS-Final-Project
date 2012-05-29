@@ -64,6 +64,12 @@ void QBoardView::paintEvent(QPaintEvent* event)
 
 }
 
+void QBoardView::acceptCommandList(QList<int> localCommandList) {
+    //Do something with the command list.
+
+
+}
+
 void QBoardView::updateBoardColours() {
 
     this->update();

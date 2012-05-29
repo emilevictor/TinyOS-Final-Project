@@ -9,28 +9,19 @@
 #include <QProcess>
 #include <QDebug>
 
-/*
-  Notes on getting this program to connect to mote via telnet.
+/** COMMAND DEFINITIONS **/
 
-  You need to go to /home/user/local/src/tinyos-2.x/support/sdk/cpp/sf
+#define MODE            0
+#define CMD             1
+#define CMD_DURATION    2
+#define ACK             3
+#define REQ_INFO        4
+#define CURRENT_X       5
+#define CURRENT_Y       6
+#define HIT_WALL        7
 
-  ./sf control_port 9003
-  then in that terminal type:
-
-  start 9004 /dev/ttyUSB2 57600
-
-  ** at this point, if you specified the right port it should be ready to receive packets
-
-  In this program:
-
-  telnet localhost 9004
-
-  then type "U " to start the stream
-
-
-
-
-  */
+//Then run serialforwarder: java net.tinyos.sf.SerialForwarder -comm serial@/dev/ttyUSB1:iris
+////java -cp /home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar:/home/user/local/src/finalQtProject/finalProject/Final/mote roboTalker
 
 
 RemoteWidget::RemoteWidget(QWidget *parent) :
@@ -93,93 +84,49 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     vboxLayout->addLayout(controlGridLayout);
     vboxLayout->addWidget(board);
 
-//    //QString program = "/usr/bin/java";
-//    QString program = "java";
+    //Connections
 
-//    QStringList arguments;
-
-//    arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar" << "net.tinyos.tools.PrintfClient" << "-comm" << "serial@/dev/ttyUSB1:iris";
-//    myProcess = new QProcess(parent);
-//    //myProcess->setProcessChannelMode(QProcess::ForwardedChannels);
-//    myProcess->start(program, arguments);
-//    connect(myProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));
+    connect(this,SIGNAL(commandListReceived(QList<int>),board,SLOT(acceptCommandList(QList<int>))))
 
 
-    /*
-    port = new QextSerialPort(QLatin1String("/dev/ttyUSB1"), QextSerialPort::EventDriven);
-
-    port->setBaudRate(BAUD57600);
-    port->setFlowControl(FLOW_OFF);
-    port->setParity(PAR_NONE);
-    port->setDataBits(DATA_8);
-    port->setStopBits(STOP_1);
-    //set timeouts to 500 ms
-    port->setTimeout(500);
-
-    if (port->open(QIODevice::ReadWrite) == true) {
-        connect(port, SIGNAL(readyRead()), this, SLOT(messageReady()));
-        connect(port, SIGNAL(dsrChanged(bool)), this, SLOT(onDsrChanged(bool)));
-        if (!(port->lineStatus() & LS_DSR))
-        {
-
-            qDebug() << "WARNING: DEVICE INACTIVE";
-        }
-        qDebug() << "listening for data on" << port->portName();
-    }
-    else {
-        qDebug() << "device failed to open:" << port->errorString();
-    }*/
-
-
-
-    //udpR = new udpReceiver();
-    //udpS = new udpSender();
-
-    //Connect up the buttons
-    //connect(ui->autoManualToggle,SIGNAL(clicked()),this,SLOT(autoManualButtonClicked()));
-    //connect(udpR, SIGNAL(receivedDatagram(QString)), this, SLOT(packetReceivedUpdateUI(QString)));
 
 }
 
+//Handles the responses from the java program. Splits the string,
+//converts to ints, and puts them into a global array.
 void RemoteWidget::handleMoteResponse(){
     if (myProcess->canReadLine())
     {
-        //QString lastLine = myProcess->readAll();
-        //lastLine.remove(0,15);
 
-        //ERROR: only outputting "$ on every line.
+        QString receivedResponse = myProcess->readLine();
 
-        QString receivedResponse = myProcess->readAllStandardOutput();
+        receivedResponse = receivedResponse.trimmed();
 
-        receivedResponse.remove(0,1);
+        receivedCommandsSplit = receivedResponse.split(" ");
+        if (!receivedCommandsSplit.isEmpty() && (receivedCommandsSplit.length() >= 7))
+        {
+            commandList.clear();
 
-        qDebug() << receivedResponse;
-        //qDebug() << lastLine << "<-- received line";
-        //qDebug() << myProcess->readAll() << "<-- output from program";
+            for (int i=0; i<receivedCommandsSplit.length();i++)
+            {
+                commandList.append(receivedCommandsSplit.at(i).toInt());
+            }
+
+            emit commandListReceived(commandList);
+
+        }
+
     }
 }
 
 void RemoteWidget::startListening() {
-    /*QString program = "telnet";
 
-    QStringList arguments;
-
-    arguments << "localhost" << this->deviceNameInput->text();
-    myProcess = new QProcess(this);
-    //myProcess->setProcessChannelMode(QProcess::ForwardedChannels);
-    myProcess->setProcessChannelMode(QProcess::MergedChannels);
-    myProcess->start(program, arguments);
-    QByteArray handshake = "U ";
-
-    myProcess->write(handshake);
-    connect(myProcess,SIGNAL(readyRead()),this,SLOT(handleMoteResponse()));*/
-
-    //QString program = "/usr/bin/java";
     QString program = "java";
 
     QStringList arguments;
 
-    arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar" << "net.tinyos.tools.PrintfClient" << "-comm" << "serial@/dev/ttyUSB2:iris";
+    arguments << "-classpath" << "/home/user/local/src/tinyos-2.x/support/sdk/java/tinyos.jar:/home/user/local/src/finalQtProject/finalProject/Final/mote" << "roboTalker";
+    //arguments << "-cp" << "mote/"<< 'roboTalker';
     myProcess = new QProcess(this);
     myProcess->setProcessChannelMode(QProcess::MergedChannels);
     myProcess->start(program, arguments);
