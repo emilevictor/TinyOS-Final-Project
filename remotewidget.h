@@ -1,6 +1,17 @@
 #ifndef REMOTEWIDGET_H
 #define REMOTEWIDGET_H
 
+/** COMMAND DEFINITIONS **/
+
+#define MODE            0
+#define CMD             1
+#define CMD_DURATION    2
+#define ACK             3
+#define REQ_INFO        4
+#define CURRENT_X       5
+#define CURRENT_Y       6
+#define HIT_WALL        7
+
 #include <QWidget>
 #include <QGridLayout>
 #include <QLabel>

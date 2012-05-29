@@ -1,10 +1,14 @@
 #include "QBoardView.h"
 #include <math.h>
+#include <QImage>
+#include <QDebug>
+
 
 QBoardView::QBoardView(QWidget *parent) : QWidget(parent)
 {
 
     this->setMinimumSize(640,480);
+
     update();
 }
 
@@ -49,16 +53,41 @@ void QBoardView::paintEvent(QPaintEvent* event)
     listOfPenColours.append(penGreen);
     listOfPenColours.append(penRed);
 
+    //Print all the coloured squares, and add them to X and Y lists of co-ordinates.
     for (int i = 35; i < 620; i=i+30)
     {
+        if (xPixelCoords.length() < 20)
+        {
+            xPixelCoords.append(i);
+        }
+
         for (int j = 35; j < 445; j = j + 27)
         {
+            if (yPixelCoords.length() < 15)
+            {
+                yPixelCoords.append(j);
+            }
             p.setPen(listOfPenColours.at(rand() % 4));
             p.drawPoint(i,j);
         }
     }
 
+    //Here we need to place the mote where it currently is.
+    QImage tiBot(":/images/transparentTI.png");
+    tiBot = tiBot.scaledToWidth(50);
+    if (!receivedCommandList.isEmpty())
+    {
 
+        if (receivedCommandList.at(HIT_WALL) == 1)
+        {
+                //p.setPen(penRed);
+                p.fillRect(xPixelCoords.at(receivedCommandList.at(CURRENT_X))-23,yPixelCoords.at(receivedCommandList.at(CURRENT_Y))-18,
+                           49,40, Qt::red);
+        }
+        p.drawImage(xPixelCoords.at(receivedCommandList.at(CURRENT_X))-23,
+                    yPixelCoords.at(receivedCommandList.at(CURRENT_Y))-18,tiBot);
+
+    }
 
 
 
@@ -66,8 +95,7 @@ void QBoardView::paintEvent(QPaintEvent* event)
 
 void QBoardView::acceptCommandList(QList<int> localCommandList) {
     //Do something with the command list.
-
-
+    receivedCommandList = localCommandList;
 }
 
 void QBoardView::updateBoardColours() {

@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/images">
-        <file alias="transparentTI">images/transparentTI.png</file>
+    <qresource prefix="/">
+        <file>images/transparentTI.png</file>
     </qresource>
 </RCC>

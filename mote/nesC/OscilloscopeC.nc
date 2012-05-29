@@ -51,6 +51,16 @@ implementation
   void report_received() { call Leds.led2Toggle(); }
 
   event void Boot.booted() {
+    local.mode = 0;
+    local.cmd_duration = 3;
+    local.ack = 0;
+    local.req_info = 0;
+    local.current_x = 0;
+    local.current_y = 0;
+    local.hit_wall = 1;
+    local.cmd = 1;
+
+
     //local.interval = DEFAULT_INTERVAL;
     //local.id = TOS_NODE_ID;
     if (call RadioControl.start() != SUCCESS)
@@ -104,8 +114,19 @@ implementation
     local.cmd_duration = 3;
     local.ack = 0;
     local.req_info = 0;
-    local.current_x = 33;
-    local.current_y = 32;
+    /*if (local.current_x >= 21)
+    {
+      local.current_x = 0;
+    }
+    local.current_x++;
+    if (local.current_y >= 15)
+    {
+      local.current_y = 0;
+    }
+    local.current_y++;*/
+
+    local.current_x = 1;
+    local.current_y = 1;
     local.hit_wall = 1;
     local.cmd = 1;
 

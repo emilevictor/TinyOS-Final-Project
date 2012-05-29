@@ -59,13 +59,13 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     pbLeft->setText("Left");
     controlGridLayout->addWidget(pbLeft,1,0);
 
-    deviceName = new QLabel(this);
+    /*deviceName = new QLabel(this);
     deviceName->setText("Device port:");
-    controlGridLayout->addWidget(deviceName,3,0);
+    controlGridLayout->addWidget(deviceName,3,0);*/
 
-    deviceNameInput = new QLineEdit(this);
+    /*deviceNameInput = new QLineEdit(this);
     deviceNameInput->setText("9004");
-    controlGridLayout->addWidget(deviceNameInput,3,1);
+    controlGridLayout->addWidget(deviceNameInput,3,1);*/
 
     setDeviceButton = new QPushButton(this);
     setDeviceButton->setText("Start listening");
@@ -86,7 +86,7 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
 
     //Connections
 
-    connect(this,SIGNAL(commandListReceived(QList<int>),board,SLOT(acceptCommandList(QList<int>))))
+    connect(this,SIGNAL(commandListReceived(QList<int>)),board,SLOT(acceptCommandList(QList<int>)));
 
 
 
@@ -111,7 +111,6 @@ void RemoteWidget::handleMoteResponse(){
             {
                 commandList.append(receivedCommandsSplit.at(i).toInt());
             }
-
             emit commandListReceived(commandList);
 
         }
