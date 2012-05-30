@@ -1,0 +1,54 @@
+
+/**
+ * 
+ * Button demo application.
+ *
+ * @author Philipp Sommer
+ */
+
+#include "Timer.h"
+
+module ButtonC
+{
+  uses {
+    interface Boot;
+    interface Leds;
+    interface Timer<TMilli>;
+    interface GeneralIO;
+    interface GpioInterrupt;
+  }
+}
+implementation
+{
+
+  // sampling frequency in binary milliseconds
+  #define SAMPLING_FREQUENCY 1000
+  
+  event void Boot.booted() {
+
+    // configure pin as input (INT pin on sensorboard)
+    call GeneralIO.makeInput();
+
+    // enable pull-up resistor
+    call GeneralIO.set();
+
+    call Timer.startPeriodic(SAMPLING_FREQUENCY);
+  }
+
+  event void Timer.fired() 
+  {
+    // check status of input (button) and set/clear red LED accordingly
+    bool high = call GeneralIO.get();
+    if (!high) call Leds.led0On();
+    else call Leds.led0Off();
+
+    // toggle green LED
+    call Leds.led2Toggle();
+  }
+ 
+  async event void GpioInterrupt.fired() {
+    // insert code for 2nd part of tut 5 here
+  }
+
+}
+

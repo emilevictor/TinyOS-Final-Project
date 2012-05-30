@@ -1,0 +1,26 @@
+/**
+ * 
+ * Button demo application.
+ * 
+ * @author Philipp Sommer
+ */
+
+configuration ButtonAppC 
+{ 
+} 
+implementation { 
+  
+  components ButtonC, MainC, LedsC, new TimerMilliC(), HplAtm128GeneralIOC;
+
+  ButtonC.Boot -> MainC;
+  ButtonC.Leds -> LedsC;
+  ButtonC.Timer -> TimerMilliC;
+  ButtonC.GeneralIO -> HplAtm128GeneralIOC.PortE7;
+
+  components HplAtm128InterruptC, new Atm128GpioInterruptC();
+  Atm128GpioInterruptC.Atm128Interrupt -> HplAtm128InterruptC.Int7;
+
+  ButtonC.GpioInterrupt -> Atm128GpioInterruptC;
+
+}
+
