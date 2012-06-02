@@ -25,10 +25,10 @@ implementation {
 
 //LED DRive
 
-  components  new TimerMilliC() as Timer0, new TimerMilliC() as Timer1, HplAtm128GeneralIOC;
+  components  new TimerMilliC() as BoardBlinkTimer, new TimerMilliC() as Timer1, HplAtm128GeneralIOC;
 
 
-    LedTimeSyncC.Timer0 -> Timer0;
+    LedTimeSyncC.BoardBlinkTimer -> BoardBlinkTimer;
     LedTimeSyncC.Timer1 -> Timer1;   
     LedTimeSyncC.CSEL1 -> HplAtm128GeneralIOC.PortC0;
     LedTimeSyncC.CSEL0 -> HplAtm128GeneralIOC.PortC1;

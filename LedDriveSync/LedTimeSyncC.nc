@@ -20,7 +20,7 @@ module LedTimeSyncC
     interface LocalTime<TMilli>;
 
 
-    interface Timer<TMilli> as Timer0;
+    interface Timer<TMilli> as BoardBlinkTimer;
     interface Timer<TMilli> as Timer1;   
     interface GeneralIO as CSEL1;
     interface GeneralIO as CSEL0;
@@ -84,6 +84,12 @@ implementation
     // start timer to toggle LEDs every second.
     call BlinkTimer.startPeriodic(1024);
 
+    if (TOS_NODE_ID==ROOT_ID)
+    {
+      // start timer for time synchronization on root node
+      call BoardBlinkTimer.startPeriodic(LED_ON);
+    }
+
     column = 0;
     rowCount = 0;
     //configure pins as outputs
@@ -95,7 +101,7 @@ implementation
     call BLANK.makeOutput();
     call CSEL2.makeOutput();
     call nDSEL.makeOutput();
-   // call Timer0.startPeriodic(SAMPLING_FREQUENCY);
+   // call BoardBlinkTimer.startPeriodic(SAMPLING_FREQUENCY);
 
   }
 //TIMESYNC CODE BELOW =============================================================
@@ -126,7 +132,7 @@ implementation
 
     // start new timer for next event delta milliseconds relative to local
     call BlinkTimer.startOneShotAt(local, delta);
-	//call Timer0.startPeriodic(delta);
+    call BoardBlinkTimer.startPeriodic(LED_ON);
 
     //printf("local: %lu, next: %lu, global: %lu, delta: %lu\n\n", local, next, global, delta);
     //printfflush();
@@ -145,6 +151,7 @@ implementation
 
     // TODO: set globalTime field in TimeSyncMsg to the current localTime of reference node (see TimeSync.h)
     msg->globalTime = localTime;	
+    msg->column = column;
 
     // broadcast timesync message to single-hop neighbors
     if (call TimeSyncAMSend.send(AM_BROADCAST_ADDR, &outgoingMessage, sizeof(TimeSyncMsg), localTime)!=SUCCESS) {
@@ -159,6 +166,7 @@ implementation
     {
       uint32_t localTime = call TimeSyncPacket.eventTime(msg);
       uint32_t globalTime = ((TimeSyncMsg*)payload)->globalTime;
+      column = ((TimeSyncMsg*)payload)->column;
       
       updateClockOffset(localTime, globalTime);
     }
@@ -181,20 +189,20 @@ implementation
 //LED DRIVING CODE ===========================================================================================
 
 
-  event void Timer0.fired()
+  event void BoardBlinkTimer.fired()
   {
 
       uint8_t i=0;
       uint16_t row=0;
-      //printf("Fuuuu");
-      //printfflush();
+      printf("LEDBLINK\n");
+      printfflush();
       call nDSEL.clr();
       call BLANK.clr();
 
     if(column == 0){
      	    call CSEL0.clr();
-	    call CSEL1.clr();
-	    call CSEL2.clr();
+	       call CSEL1.clr();
+	         call CSEL2.clr();
 	/*			call Leds.led0Off();
 				call Leds.led1Off();
 				call Leds.led2Off();*/
