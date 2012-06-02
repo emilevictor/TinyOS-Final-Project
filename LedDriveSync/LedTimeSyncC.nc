@@ -21,8 +21,7 @@ module LedTimeSyncC
 
 
     interface Timer<TMilli> as Timer0;
-    interface Timer<TMilli> as Timer1; 
-    interface Timer<TMilli> as Timer2;     
+    interface Timer<TMilli> as Timer1;   
     interface GeneralIO as CSEL1;
     interface GeneralIO as CSEL0;
     interface GeneralIO as SCK;
@@ -51,7 +50,7 @@ implementation
   #define ROOT_ID 1
 
   // define timesync interval in MILLIseconds
-  #define TIMESYNC_INTERVAL 1
+  #define TIMESYNC_INTERVAL 10
   #define LEDDRV_INTERVAL 1024
   
   void updateClockOffset(uint32_t localTime, uint32_t globalTime)
@@ -62,38 +61,8 @@ implementation
     printfflush();
   }
 
-  event void Boot.booted() {
-
-    printf("Booted\n");
-    printfflush();
-
-    // start radio
-    call RadioControl.start();
-
-    // initial clock offset is zero, will be updated as soon as first timesync message has been received
-    clockOffset = 0;
-
-    // start timer to toggle LEDs
-    call BlinkTimer.startOneShot(1024);
-
-        column = 0;
-        rowCount = 0;
-        //configure pins as outputs
-        call CSEL1.makeOutput();
-        call CSEL0.makeOutput();
-        call SCK.makeOutput();
-        call SIN.makeOutput();
-        call nLATCH.makeOutput();
-        call BLANK.makeOutput();
-        call CSEL2.makeOutput();
-        call nDSEL.makeOutput();
-       // call Timer0.startPeriodic(SAMPLING_FREQUENCY);
-
-  }
-//TIMESYNC CODE BELOW =============================================================
-
   event void RadioControl.startDone(error_t error) {
-       
+   
     if (TOS_NODE_ID==ROOT_ID)
     {
       // start timer for time synchronization on root node
@@ -101,6 +70,40 @@ implementation
     }
   }
 
+  event void Boot.booted() {
+
+    //printf("Booted\n");
+    //printfflush();
+
+    // start radio
+    call RadioControl.start();
+
+    // initial clock offset is zero, will be updated as soon as first timesync message has been received
+    clockOffset = 0;
+
+    // start timer to toggle LEDs every second.
+    call BlinkTimer.startPeriodic(1024);
+
+    column = 0;
+    rowCount = 0;
+    //configure pins as outputs
+    call CSEL1.makeOutput();
+    call CSEL0.makeOutput();
+    call SCK.makeOutput();
+    call SIN.makeOutput();
+    call nLATCH.makeOutput();
+    call BLANK.makeOutput();
+    call CSEL2.makeOutput();
+    call nDSEL.makeOutput();
+   // call Timer0.startPeriodic(SAMPLING_FREQUENCY);
+
+  }
+//TIMESYNC CODE BELOW =============================================================
+
+
+  /*
+  * When we reach this function, both should be synced.
+  */
   event void BlinkTimer.fired() {
 
     uint32_t local, global, next, delta;
@@ -122,11 +125,11 @@ implementation
     delta = next - global;
 
     // start new timer for next event delta milliseconds relative to local
-    call Timer0.startOneShotAt(local, delta);
+    call BlinkTimer.startOneShotAt(local, delta);
 	//call Timer0.startPeriodic(delta);
 
-    printf("local: %lu, next: %lu, global: %lu, delta: %lu\n\n", local, next, global, delta);
-    printfflush();
+    //printf("local: %lu, next: %lu, global: %lu, delta: %lu\n\n", local, next, global, delta);
+    //printfflush();
 
 
   }
@@ -141,7 +144,7 @@ implementation
     uint32_t localTime = call LocalTime.get();
 
     // TODO: set globalTime field in TimeSyncMsg to the current localTime of reference node (see TimeSync.h)
-	msg->globalTime = localTime;	
+    msg->globalTime = localTime;	
 
     // broadcast timesync message to single-hop neighbors
     if (call TimeSyncAMSend.send(AM_BROADCAST_ADDR, &outgoingMessage, sizeof(TimeSyncMsg), localTime)!=SUCCESS) {
@@ -178,113 +181,111 @@ implementation
 //LED DRIVING CODE ===========================================================================================
 
 
-    event void Timer0.fired(){
-        uint8_t i=0;
-        uint16_t row=0;
-        call nDSEL.clr();
-        call BLANK.clr();
+  event void Timer0.fired()
+  {
 
-	    if(column == 0){
-       	    call CSEL0.clr();
-		    call CSEL1.clr();
-		    call CSEL2.clr();
-		/*			call Leds.led0Off();
-					call Leds.led1Off();
-					call Leds.led2Off();*/
-		    column++;	    
-	    }
-	    else if(column == 1){  
-	        call CSEL0.set();
-		    call CSEL1.clr();
-		    call CSEL2.clr();
-		  /*  call Leds.led0On();
-		    call Leds.led1Off();
-		    call Leds.led2Off();	    */
-            column++;		    
-	    }
-	    else if(column == 2){
-             call CSEL0.clr();
-		    call CSEL1.set();
-		    call CSEL2.clr();
-		 /*   call Leds.led0Off();
-		    call Leds.led1On();
-		    call Leds.led2Off();		    */
-            column++;		    
-	    } 
-	    else if(column == 3){
-            call CSEL0.set();
-		    call CSEL1.set();
-		    call CSEL2.clr();
-	/*	    call Leds.led0On();
-		    call Leds.led1On();
-		    call Leds.led2Off();		    */
-            column++;		    
-	    }
-	    else if(column == 4){  
-	        call CSEL0.clr();
-		    call CSEL1.clr();
-		    call CSEL2.set();
-		 /*   call Leds.led0Off();
-		    call Leds.led1Off();
-		    call Leds.led2On();		    */
-            column++;		    
-	    }
-	    else if(column == 5){
-            call CSEL0.set();
-		    call CSEL1.clr();
-		    call CSEL2.set();
-		 /*   call Leds.led0On();
-		    call Leds.led1Off();
-		    call Leds.led2On();		    */
-            column++;		    
-	    } 
-	    else if(column == 6){
-            call CSEL0.clr();
-		    call CSEL1.set();
-		    call CSEL2.set();
-		 /*   call Leds.led0Off();
-		    call Leds.led1On();
-		    call Leds.led2On();		    */
-            column++;		    
-	    }   
-	    else if(column == 7){
-            call CSEL0.set();
-		    call CSEL1.set();
-		    call CSEL2.set();
-		/*    call Leds.led0On();
-		    call Leds.led1On();
-		    call Leds.led2On();		    */
-            column=0;
-	    }	 
-  
-        call SIN.set();                                                                                                                
-        for (i = 0; i < 15; i++){
-            if (i == 15){
-                call nLATCH.set();
-                call SCK.set();
-                call SCK.clr();
-                call nLATCH.clr();                        
-            }
-            else{
-                call SCK.set();
-                call SCK.clr();
-            }
-        }
-        
-        call Timer1.startPeriodic(LED_ON);	
-        call SIN.clr();
-        call Timer1.stop();	    
+      uint8_t i=0;
+      uint16_t row=0;
+      //printf("Fuuuu");
+      //printfflush();
+      call nDSEL.clr();
+      call BLANK.clr();
+
+    if(column == 0){
+     	    call CSEL0.clr();
+	    call CSEL1.clr();
+	    call CSEL2.clr();
+	/*			call Leds.led0Off();
+				call Leds.led1Off();
+				call Leds.led2Off();*/
+	    column++;	    
     }
-  
-    event void Timer1.fired(){
-        call nDSEL.set();          
-        call BLANK.set();      
+    else if(column == 1){  
+        call CSEL0.set();
+	    call CSEL1.clr();
+	    call CSEL2.clr();
+	  /*  call Leds.led0On();
+	    call Leds.led1Off();
+	    call Leds.led2Off();	    */
+          column++;		    
     }
-    event void Timer2.fired(){
-        uint8_t i=0;
-        for (i = 0; i < 4; i++){
-            //do nothing
-        }     
-    }    
+    else if(column == 2){
+           call CSEL0.clr();
+	    call CSEL1.set();
+	    call CSEL2.clr();
+	 /*   call Leds.led0Off();
+	    call Leds.led1On();
+	    call Leds.led2Off();		    */
+          column++;		    
+    } 
+    else if(column == 3){
+          call CSEL0.set();
+	    call CSEL1.set();
+	    call CSEL2.clr();
+/*	    call Leds.led0On();
+	    call Leds.led1On();
+	    call Leds.led2Off();		    */
+          column++;		    
+    }
+    else if(column == 4){  
+        call CSEL0.clr();
+	    call CSEL1.clr();
+	    call CSEL2.set();
+	 /*   call Leds.led0Off();
+	    call Leds.led1Off();
+	    call Leds.led2On();		    */
+          column++;		    
+    }
+    else if(column == 5){
+          call CSEL0.set();
+	    call CSEL1.clr();
+	    call CSEL2.set();
+	 /*   call Leds.led0On();
+	    call Leds.led1Off();
+	    call Leds.led2On();		    */
+          column++;		    
+    } 
+    else if(column == 6){
+          call CSEL0.clr();
+	    call CSEL1.set();
+	    call CSEL2.set();
+	 /*   call Leds.led0Off();
+	    call Leds.led1On();
+	    call Leds.led2On();		    */
+          column++;		    
+    }   
+    else if(column == 7){
+          call CSEL0.set();
+	    call CSEL1.set();
+	    call CSEL2.set();
+	/*    call Leds.led0On();
+	    call Leds.led1On();
+	    call Leds.led2On();		    */
+          column=0;
+    }	 
+
+      call SIN.set();                                                                                                                
+      for (i = 0; i < 15; i++){
+          if (i == 15){
+              call nLATCH.set();
+              call SCK.set();
+              call SCK.clr();
+              call nLATCH.clr();                        
+          }
+          else{
+              call SCK.set();
+              call SCK.clr();
+          }
+      }
+      
+      call Timer1.startPeriodic(LED_ON);	
+      call SIN.clr();
+      call Timer1.stop();	    
+  }
+
+  event void Timer1.fired(){
+      call nDSEL.set();          
+      call BLANK.set();      
+  }  
 }
 
