@@ -1,0 +1,148 @@
+/**
+ * 
+ * TimeSync demo application using active messages.
+ * 
+ * @author Philipp Sommer (CSIRO ICT Centre)
+ */
+
+
+#include "TimeSync.h"
+#include "printf.h"
+
+module TimeSyncC
+{
+  uses {
+    interface Boot;
+    interface Leds;
+    interface Timer<TMilli> as SendTimer;
+    interface Timer<TMilli> as BlinkTimer;
+
+    interface SplitControl as RadioControl;
+    interface Receive;
+    interface TimeSyncAMSend<TMilli,uint32_t>;
+    interface TimeSyncPacket<TMilli,uint32_t>;
+    interface LocalTime<TMilli>;
+  }
+}
+
+implementation
+{
+
+  int32_t clockOffset;
+
+  message_t outgoingMessage;
+
+  // define reference (root) node
+  #define ROOT_ID 1
+
+  // define timesync interval in seconds
+  #define TIMESYNC_INTERVAL 10
+
+  
+  void updateClockOffset(uint32_t localTime, uint32_t globalTime)
+  {
+    // clock offset is defined as: offset = global - local
+    clockOffset = globalTime - localTime;
+    printf("offset: %ld, global: %ld, local%ld\n", clockOffset,globalTime,localTime);
+    printfflush();
+  }
+
+  event void Boot.booted() {
+
+    printf("Booted\n");
+    printfflush();
+
+    // start radio
+    call RadioControl.start();
+
+    // initial clock offset is zero, will be updated as soon as first timesync message has been received
+    clockOffset = 0;
+
+    // start timer to toggle LEDs
+    call BlinkTimer.startOneShot(1024);
+
+
+  }
+
+  event void RadioControl.startDone(error_t error) {
+       
+    if (TOS_NODE_ID==ROOT_ID)
+    {
+      // start timer for time synchronization on root node
+      call SendTimer.startPeriodic(1024*TIMESYNC_INTERVAL);
+    }
+  }
+
+  event void BlinkTimer.fired() {
+
+    uint32_t local, global, next, delta;
+
+    // get current time
+    local = call LocalTime.get();
+
+    // TODO: calculate global time here (see updateClockOffset for definition of clockOffset)
+    global = local + clockOffset;
+
+    // set LEDs to the lower 3 bits of the seconds counter
+    call Leds.set((global >> 10) & (0x07));
+
+    // TODO: calculate time of next event here
+
+    next = global + 1024 - (global % 1024);
+
+    // calculate delta until next event
+    delta = next - global;
+
+    // start new timer for next event delta milliseconds relative to local
+    call BlinkTimer.startOneShotAt(local, delta);
+
+    printf("local: %lu, next: %lu, global: %lu, delta: %lu\n", local, next, global, delta);
+    printfflush();
+
+
+  }
+
+
+  event void SendTimer.fired() 
+  {
+   
+    TimeSyncMsg* msg = (TimeSyncMsg*)(call TimeSyncAMSend.getPayload(&outgoingMessage, sizeof(TimeSyncMsg)));
+
+    // TODO: add current timestamp here
+    uint32_t localTime = call LocalTime.get();
+
+    // TODO: set globalTime field in TimeSyncMsg to the current localTime of reference node (see TimeSync.h)
+	msg->globalTime = localTime;	
+
+    // broadcast timesync message to single-hop neighbors
+    if (call TimeSyncAMSend.send(AM_BROADCAST_ADDR, &outgoingMessage, sizeof(TimeSyncMsg), localTime)!=SUCCESS) {
+      call Leds.set(1); // sets only red LED
+    }
+  }
+
+  event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len)
+  {
+
+    if (call TimeSyncPacket.isValid(msg))
+    {
+      uint32_t localTime = call TimeSyncPacket.eventTime(msg);
+      uint32_t globalTime = ((TimeSyncMsg*)payload)->globalTime;
+      
+      updateClockOffset(localTime, globalTime);
+    }
+
+    return msg;
+  }
+
+
+  event void TimeSyncAMSend.sendDone(message_t* ptr, error_t error)
+  {
+    if (error!=SUCCESS) {
+      call Leds.set(1); // sets only red LED
+    }
+  }
+
+  event void RadioControl.stopDone(error_t error) {}
+ 
+}
+
