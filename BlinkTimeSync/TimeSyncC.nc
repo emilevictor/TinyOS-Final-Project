@@ -43,7 +43,7 @@ implementation
   {
     // clock offset is defined as: offset = global - local
     clockOffset = globalTime - localTime;
-    printf("offset: %ld, global: %ld, local%ld\n", clockOffset,globalTime,localTime);
+    printf("offset: %ld, global: %ld, local%ld\n\n", clockOffset,globalTime,localTime);
     printfflush();
   }
 
@@ -96,7 +96,7 @@ implementation
     // start new timer for next event delta milliseconds relative to local
     call BlinkTimer.startOneShotAt(local, delta);
 
-    printf("local: %lu, next: %lu, global: %lu, delta: %lu\n", local, next, global, delta);
+    printf("local: %lu, next: %lu, global: %lu, delta: %lu\n\n", local, next, global, delta);
     printfflush();
 
 
