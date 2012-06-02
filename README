@@ -1,0 +1,6 @@
+TinyOS robot controller:
+
+1. Connect iris mote connecting BaseStation to computer via USB
+2. Run: java net.tinyos.sf.SerialForwarder -comm serial@/dev/ttyUSB1:iris
+3. Run Qt program
+4. Click "start listening"
