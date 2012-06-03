@@ -25,19 +25,13 @@ implementation {
 
 //LED DRive
 
-  components  new TimerMilliC() as BoardBlinkTimer, new TimerMilliC() as Timer1, HplAtm128GeneralIOC;
+  components  new TimerMilliC() as BoardBlinkTimer, HplAtm128GeneralIOC;
 
 
     LedTimeSyncC.BoardBlinkTimer -> BoardBlinkTimer;
-    LedTimeSyncC.Timer1 -> Timer1;   
-    LedTimeSyncC.CSEL1 -> HplAtm128GeneralIOC.PortC0;
-    LedTimeSyncC.CSEL0 -> HplAtm128GeneralIOC.PortC1;
-    LedTimeSyncC.SCK -> HplAtm128GeneralIOC.PortC2;
-    LedTimeSyncC.SIN -> HplAtm128GeneralIOC.PortC3;
-    LedTimeSyncC.nLATCH -> HplAtm128GeneralIOC.PortC4;
-    LedTimeSyncC.BLANK -> HplAtm128GeneralIOC.PortC5;
-    LedTimeSyncC.CSEL2 -> HplAtm128GeneralIOC.PortC6;
-    LedTimeSyncC.nDSEL -> HplAtm128GeneralIOC.PortC7;
+
+    LedTimeSyncC.interruptTrigger -> HplAtm128GeneralIOC.PortC7;
+
 
 }
 
