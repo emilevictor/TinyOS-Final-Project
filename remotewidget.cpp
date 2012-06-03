@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QProcess>
 #include <QDebug>
+#include <QKeyEvent>
 
 /** COMMAND DEFINITIONS **/
 
@@ -108,6 +109,29 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
 
 }
 
+void RemoteWidget::keyPressEvent(QKeyEvent *event)
+{
+    if (!moteIsAutomatic)
+    {
+        if (event->key() == Qt::Key_W)
+        {
+            moveForwards();
+        } else if (event->key() == Qt::Key_D)
+        {
+            rotateClockwise();
+        } else if (event->key() == Qt::Key_A)
+        {
+            rotateAnticlockwise();
+        } else if (event->key() == Qt::Key_Z)
+        {
+            moveBackwards();
+        } else if (event->key() == Qt::Key_S)
+        {
+            stopVehicle();
+        }
+    }
+}
+
 void RemoteWidget::setDurationMilliseconds() {
 
     durationMilliseconds = cmdDuration->displayText().toInt();
@@ -136,6 +160,7 @@ void RemoteWidget::handleMoteResponse(){
             {
                 commandList.append(receivedCommandsSplit.at(i).toInt());
             }
+            qDebug() << commandList;
             emit commandListReceived(commandList);
 
         }
@@ -151,7 +176,7 @@ void RemoteWidget::sendMessage(QList<int> localCommandList)
 {
     //Construct string including a newline character
     QString sentString = "";
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 9; i++)
     {
         sentString = sentString + QString::number(localCommandList.at(i)) + " ";
     }
@@ -229,6 +254,7 @@ void RemoteWidget::autoManualButtonClicked()
         commandListToBeSent.append(254);
         commandListToBeSent.append(254);
         commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
         sendMessage(commandListToBeSent);
         pbToggleManualAuto->setText("Current: Manual Mode");
 
@@ -249,6 +275,8 @@ void RemoteWidget::autoManualButtonClicked()
         commandListToBeSent.append(254);
         commandListToBeSent.append(254);
         commandListToBeSent.append(254);
+        commandListToBeSent.append(254);
+
         sendMessage(commandListToBeSent);
         pbToggleManualAuto->setText("Current: Auto Mode");
 
@@ -281,6 +309,8 @@ void RemoteWidget::moveForwards()
     commandListToBeSent.append(254); //CURRENT_X - we don't care
     commandListToBeSent.append(254); //CURRENT_Y - we don't care
     commandListToBeSent.append(254); //HIT_WALL - we don't care
+    commandListToBeSent.append(254);
+
     sendMessage(commandListToBeSent);
 
 }
@@ -304,6 +334,8 @@ void RemoteWidget::stopVehicle()
     commandListToBeSent.append(254); //CURRENT_X - we don't care
     commandListToBeSent.append(254); //CURRENT_Y - we don't care
     commandListToBeSent.append(254); //HIT_WALL - we don't care
+    commandListToBeSent.append(254);
+
     sendMessage(commandListToBeSent);
 
 }
@@ -328,6 +360,8 @@ void RemoteWidget::moveBackwards()
     commandListToBeSent.append(254); //CURRENT_X - we don't care
     commandListToBeSent.append(254); //CURRENT_Y - we don't care
     commandListToBeSent.append(254); //HIT_WALL - we don't care
+    commandListToBeSent.append(254);
+
     sendMessage(commandListToBeSent);
 
 }
@@ -352,6 +386,9 @@ void RemoteWidget::rotateAnticlockwise()
     commandListToBeSent.append(254); //CURRENT_X - we don't care
     commandListToBeSent.append(254); //CURRENT_Y - we don't care
     commandListToBeSent.append(254); //HIT_WALL - we don't care
+    commandListToBeSent.append(254);
+
+
     sendMessage(commandListToBeSent);
 
 }
@@ -377,6 +414,8 @@ void RemoteWidget::rotateClockwise()
     commandListToBeSent.append(254); //CURRENT_X - we don't care
     commandListToBeSent.append(254); //CURRENT_Y - we don't care
     commandListToBeSent.append(254); //HIT_WALL - we don't care
+    commandListToBeSent.append(254);
+
     sendMessage(commandListToBeSent);
 
 }

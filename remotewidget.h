@@ -20,6 +20,7 @@
 #include "QBoardView.h"
 #include <QProcess>
 #include <QLineEdit>
+#include <QKeyEvent>
 
 namespace Ui {
     class RemoteWidget;
@@ -85,7 +86,7 @@ private:
     QPushButton         *pbStartListening;
     QStringList         receivedCommandsSplit;
     QList<int>          commandList;
-
+    void                keyPressEvent(QKeyEvent *event);
 
 
 };

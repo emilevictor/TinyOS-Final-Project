@@ -36,6 +36,7 @@ typedef nx_struct packet {
 	nx_uint8_t current_x;
 	nx_uint8_t current_y;
 	nx_uint8_t hit_wall;
+  	nx_uint32_t globalTime;
 } packet_t;
 
 #endif

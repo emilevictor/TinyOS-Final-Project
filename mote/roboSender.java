@@ -44,8 +44,9 @@ public class roboSender implements MessageListener
 				Short current_x = Short.valueOf(splitCommand[5]);
 				Short current_y = Short.valueOf(splitCommand[6]);
 				Short hit_wall = Short.valueOf(splitCommand[7]);
+				Short globalTime = Short.valueOf(splitCommand[8]);
 
-				sendMessage(mode,cmd,cmd_duration,ack,req_info,current_x,current_y,hit_wall);
+				sendMessage(mode,cmd,cmd_duration,ack,req_info,current_x,current_y,hit_wall,globalTime);
 			} else {
 				System.out.println("Message not sent, not enough arguments provided.");
 			}
@@ -65,7 +66,7 @@ public class roboSender implements MessageListener
 
 	public void sendMessage(Short mode, Short cmd, Short cmd_duration,
 		Short ack, Short req_info, Short current_x, Short current_y,
-		Short hit_wall)
+		Short hit_wall, Short globalTime)
 	{
 		RobotMessaging rm = new RobotMessaging();
 		rm.set_mode(mode);
@@ -76,6 +77,7 @@ public class roboSender implements MessageListener
 		rm.set_current_x(current_x);
 		rm.set_current_y(current_y);
 		rm.set_hit_wall(hit_wall);
+		rm.set_globalTime(globalTime);
 	    try {
 	        mote.send(MoteIF.TOS_BCAST_ADDR, rm);
 	    } catch (IOException e) {

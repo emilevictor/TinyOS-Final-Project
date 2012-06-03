@@ -27,7 +27,7 @@ public class roboTalker implements MessageListener
 
 	        /* Update interval and mote data */
 	        //periodUpdate(omsg.get_version(), omsg.get_interval());
-	        System.out.println(rm.get_mode() + " " + rm.get_cmd() + " " + rm.get_cmd_duration() + " " + rm.get_ack() + " " + rm.get_req_info() + " " + rm.get_current_x() + " " + rm.get_current_y() + " " + rm.get_hit_wall());
+	        System.out.println(rm.get_mode() + " " + rm.get_cmd() + " " + rm.get_cmd_duration() + " " + rm.get_ack() + " " + rm.get_req_info() + " " + rm.get_current_x() + " " + rm.get_current_y() + " " + rm.get_hit_wall() + " " + rm.get_globalTime());
 	        //data.update(omsg.get_id(), omsg.get_count(), omsg.get_readings());
 
 	        /* Inform the GUI that new data showed up */
