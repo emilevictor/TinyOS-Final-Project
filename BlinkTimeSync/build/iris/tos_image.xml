@@ -1,11 +1,11 @@
 <tos_image>
   <ident>
-    <uidhash>147EAC00L</uidhash>
+    <uidhash>EED1005AL</uidhash>
     <hostname>ubuntu</hostname>
     <username>user</username>
     <appname>TimeSyncAppC</appname>
     <userhash>5E211F76L</userhash>
-    <timestamp>4FC99EA2L</timestamp>
+    <timestamp>4FC9C8A4L</timestamp>
     <deluge_support>no</deluge_support>
     <platform>iris</platform>
   </ident>

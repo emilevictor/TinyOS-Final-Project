@@ -31,6 +31,8 @@ private:
     QList<int>      xPixelCoords;
     QList<int>      yPixelCoords;
 
+    int                 currentRow;
+
 
 public slots:
     void updateBoardColours();

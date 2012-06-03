@@ -8,7 +8,7 @@ QBoardView::QBoardView(QWidget *parent) : QWidget(parent)
 {
 
     this->setMinimumSize(640,480);
-
+    currentRow = 0;
     update();
 }
 
@@ -54,22 +54,42 @@ void QBoardView::paintEvent(QPaintEvent* event)
     listOfPenColours.append(penRed);
 
     //Print all the coloured squares, and add them to X and Y lists of co-ordinates.
+    int row = 0;
     for (int i = 35; i < 620; i=i+30)
     {
+
         if (xPixelCoords.length() < 20)
         {
             xPixelCoords.append(i);
         }
-
+        int column = 0;
         for (int j = 35; j < 445; j = j + 27)
         {
             if (yPixelCoords.length() < 15)
             {
                 yPixelCoords.append(j);
             }
-            p.setPen(listOfPenColours.at(rand() % 4));
-            p.drawPoint(i,j);
+
+            if ((row % 4) == 0)
+            {
+                p.setPen(penRed);
+            } else if ((row % 4) == 1)
+            {
+                p.setPen(penGreen);
+            } else if ((row % 4) == 2) {
+                p.setPen(penBlue);
+            } else {
+                p.setPen(penWhite);
+            }
+            //p.setPen(listOfPenColours.at(rand() % 4));
+            if (row == currentRow)
+            {
+                p.drawPoint(i,j);
+            }
+
+            column++;
         }
+        row++;
     }
 
     //Here we need to place the mote where it currently is.
@@ -88,7 +108,9 @@ void QBoardView::paintEvent(QPaintEvent* event)
                     yPixelCoords.at(receivedCommandList.at(CURRENT_Y))-18,tiBot);
 
     }
-
+    if (currentRow++ > 19) {
+        currentRow = 0;
+    }
 
 
 }

@@ -87,6 +87,7 @@ private:
     QList<int>          commandList;
 
 
+
 };
 
 #endif // REMOTEWIDGET_H

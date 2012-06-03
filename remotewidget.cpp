@@ -28,11 +28,10 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::RemoteWidget)
 {
-
     durationMilliseconds = 500;
     vboxLayout = new QVBoxLayout(this);
 
-    moteIsAutomatic = true;
+    moteIsAutomatic = false;
     //ui->setupUi(this);
     //ui->currentModeText->setText("Auto");
     controlGridLayout = new QGridLayout(this);
@@ -93,7 +92,7 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
 
     /*** BOARD ***/
     QTimer *timer = new QTimer(this);
-    timer->setInterval(400);
+    timer->setInterval(25);
     timer->start();
     board = new QBoardView(this);
     connect(timer, SIGNAL(timeout()), board, SLOT(updateBoardColours()));
@@ -112,6 +111,7 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
 void RemoteWidget::setDurationMilliseconds() {
 
     durationMilliseconds = cmdDuration->displayText().toInt();
+    durationMilliseconds = (int)(((float)durationMilliseconds/1000)*1024);
     qDebug() << durationMilliseconds;
 }
 
@@ -157,6 +157,8 @@ void RemoteWidget::sendMessage(QList<int> localCommandList)
     }
     sentString.chop(1);
     sentString += "\n";
+    qDebug() << sentString;
+
 
     //Convert it into a QByteArray*
 
@@ -361,7 +363,7 @@ void RemoteWidget::rotateAnticlockwise()
 void RemoteWidget::rotateClockwise()
 {
 
-    qDebug() << "Rotating clockwise";
+    qDebug() << "Rotating clockwise ";
 
 
     QList<int> commandListToBeSent;

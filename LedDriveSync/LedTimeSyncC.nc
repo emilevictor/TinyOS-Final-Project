@@ -43,13 +43,14 @@ implementation
   #define ROOT_ID 1
 
   // define timesync interval in MILLIseconds
-  #define TIMESYNC_INTERVAL 10
+  #define TIMESYNC_INTERVAL 18
   #define LEDDRV_INTERVAL 1024
   
   void updateClockOffset(uint32_t localTime, uint32_t globalTime)
   {
     // clock offset is defined as: offset = global - local
     clockOffset = globalTime - localTime;
+
     printf("offset: %ld, global: %ld, local%ld\n\n", clockOffset,globalTime,localTime);
     printfflush();
   }
@@ -59,7 +60,7 @@ implementation
     if (TOS_NODE_ID==ROOT_ID)
     {
       // start timer for time synchronization on root node
-      call SendTimer.startPeriodic(1024*TIMESYNC_INTERVAL);
+      call SendTimer.startPeriodic(320*TIMESYNC_INTERVAL);
     }
   }
 
@@ -89,6 +90,7 @@ implementation
     rowCount = 0;
     //configure pins as outputs
     call interruptTrigger.makeOutput();
+    call interruptTrigger.set();
    // call BoardBlinkTimer.startPeriodic(SAMPLING_FREQUENCY);
 
   }
@@ -123,7 +125,7 @@ implementation
     call BlinkTimer.startOneShotAt(local, delta);
     printf("Hello\n");
 
-    call BoardBlinkTimer.startPeriodic(320);
+
 
     //printf("local: %lu, next: %lu, global: %lu, delta: %lu\n\n", local, next, global, delta);
     //printfflush();
@@ -143,7 +145,6 @@ implementation
     // TODO: set globalTime field in TimeSyncMsg to the current localTime of reference node (see TimeSync.h)
     msg->globalTime = localTime;	
     msg->column = column;
-
     // broadcast timesync message to single-hop neighbors
     if (call TimeSyncAMSend.send(AM_BROADCAST_ADDR, &outgoingMessage, sizeof(TimeSyncMsg), localTime)!=SUCCESS) {
       call Leds.set(1); // sets only red LED
@@ -152,7 +153,6 @@ implementation
 
   event message_t* Receive.receive(message_t* msg, void* payload, uint8_t len)
   {
-
     if (call TimeSyncPacket.isValid(msg))
     {
       uint32_t localTime = call TimeSyncPacket.eventTime(msg);
@@ -160,6 +160,9 @@ implementation
       column = ((TimeSyncMsg*)payload)->column;
       
       updateClockOffset(localTime, globalTime);
+      call BoardBlinkTimer.startPeriodic(320);
+      multipleOf600MS = 1;
+
     }
 
     return msg;
@@ -171,6 +174,9 @@ implementation
     if (error!=SUCCESS) {
       call Leds.set(1); // sets only red LED
     }
+
+    call BoardBlinkTimer.startPeriodic(320);
+    multipleOf600MS = 1;
   }
 
   event void RadioControl.stopDone(error_t error) {}
@@ -182,14 +188,14 @@ implementation
 
   event void BoardBlinkTimer.fired()
   {
-   printf("does %d == %d\n",TOS_NODE_ID, (int)multipleOf600MS);
-    printfflush();
+   //printf("does %d == %d\n",TOS_NODE_ID, (int)multipleOf600MS);
+    //printfflush();
     if (multipleOf600MS == (uint32_t)TOS_NODE_ID)
     {
-        call interruptTrigger.set();
         call interruptTrigger.clr(); 
-        printf("BITBANGED");
-        printfflush();
+        call interruptTrigger.set();
+        //printf("BITBANGED");
+        //printfflush();
     }
 
     if (multipleOf600MS == 3)
