@@ -82,10 +82,10 @@ void QBoardView::paintEvent(QPaintEvent* event)
                 p.setPen(penWhite);
             }
             //p.setPen(listOfPenColours.at(rand() % 4));
-            if (row == currentRow)
-            {
-                p.drawPoint(i,j);
-            }
+            /*if (row == currentRow)
+            {*/
+            p.drawEllipse(i,j,1,1);
+            /*}*/
 
             column++;
         }

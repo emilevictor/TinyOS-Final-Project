@@ -7,12 +7,12 @@
 public class RobotMessaging extends net.tinyos.message.Message {
 
     /** The default size of this message type in bytes. */
-    public static final int DEFAULT_MESSAGE_SIZE = 9;
+    public static final int DEFAULT_MESSAGE_SIZE = 13;
 
     /** The Active Message type associated with this message. */
     public static final int AM_TYPE = 147;
 
-    /** Create a new RobotMessaging of size 9. */
+    /** Create a new RobotMessaging of size 13. */
     public RobotMessaging() {
         super(DEFAULT_MESSAGE_SIZE);
         amTypeSet(AM_TYPE);
@@ -107,6 +107,9 @@ public class RobotMessaging extends net.tinyos.message.Message {
       } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
       try {
         s += "  [hit_wall=0x"+Long.toHexString(get_hit_wall())+"]\n";
+      } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
+      try {
+        s += "  [globalTime=0x"+Long.toHexString(get_globalTime())+"]\n";
       } catch (ArrayIndexOutOfBoundsException aioobe) { /* Skip field */ }
       return s;
     }
@@ -615,6 +618,69 @@ public class RobotMessaging extends net.tinyos.message.Message {
      */
     public static int sizeBits_hit_wall() {
         return 8;
+    }
+
+    /////////////////////////////////////////////////////////
+    // Accessor methods for field: globalTime
+    //   Field type: long, unsigned
+    //   Offset (bits): 72
+    //   Size (bits): 32
+    /////////////////////////////////////////////////////////
+
+    /**
+     * Return whether the field 'globalTime' is signed (false).
+     */
+    public static boolean isSigned_globalTime() {
+        return false;
+    }
+
+    /**
+     * Return whether the field 'globalTime' is an array (false).
+     */
+    public static boolean isArray_globalTime() {
+        return false;
+    }
+
+    /**
+     * Return the offset (in bytes) of the field 'globalTime'
+     */
+    public static int offset_globalTime() {
+        return (72 / 8);
+    }
+
+    /**
+     * Return the offset (in bits) of the field 'globalTime'
+     */
+    public static int offsetBits_globalTime() {
+        return 72;
+    }
+
+    /**
+     * Return the value (as a long) of the field 'globalTime'
+     */
+    public long get_globalTime() {
+        return (long)getUIntBEElement(offsetBits_globalTime(), 32);
+    }
+
+    /**
+     * Set the value of the field 'globalTime'
+     */
+    public void set_globalTime(long value) {
+        setUIntBEElement(offsetBits_globalTime(), 32, value);
+    }
+
+    /**
+     * Return the size, in bytes, of the field 'globalTime'
+     */
+    public static int size_globalTime() {
+        return (32 / 8);
+    }
+
+    /**
+     * Return the size, in bits, of the field 'globalTime'
+     */
+    public static int sizeBits_globalTime() {
+        return 32;
     }
 
 }

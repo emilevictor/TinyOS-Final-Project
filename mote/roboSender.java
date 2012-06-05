@@ -44,7 +44,7 @@ public class roboSender implements MessageListener
 				Short current_x = Short.valueOf(splitCommand[5]);
 				Short current_y = Short.valueOf(splitCommand[6]);
 				Short hit_wall = Short.valueOf(splitCommand[7]);
-				Short globalTime = Short.valueOf(splitCommand[8]);
+				long globalTime = Long.valueOf(splitCommand[8]);
 
 				sendMessage(mode,cmd,cmd_duration,ack,req_info,current_x,current_y,hit_wall,globalTime);
 			} else {
@@ -66,7 +66,7 @@ public class roboSender implements MessageListener
 
 	public void sendMessage(Short mode, Short cmd, Short cmd_duration,
 		Short ack, Short req_info, Short current_x, Short current_y,
-		Short hit_wall, Short globalTime)
+		Short hit_wall, long globalTime)
 	{
 		RobotMessaging rm = new RobotMessaging();
 		rm.set_mode(mode);

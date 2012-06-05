@@ -72,13 +72,20 @@ RemoteWidget::RemoteWidget(QWidget *parent) :
     controlGridLayout->addWidget(cmdDuration,3,1);
 
     pbToggleManualAuto = new QPushButton(this);
-    pbToggleManualAuto->setText("Auto Mode");
+    pbToggleManualAuto->setText("Current: Manual (click to toggle)");
     controlGridLayout->addWidget(pbToggleManualAuto,4,1);
     pbToggleManualAuto->setVisible(false);
 
     pbStartListening = new QPushButton(this);
     pbStartListening->setText("Start listening");
     controlGridLayout->addWidget(pbStartListening,4,2);
+
+    //Hide all the manual controls until we start listening.
+    pbForwards->setVisible(false);
+    pbBackwards->setVisible(false);
+    pbStop->setVisible(false);
+    pbRight->setVisible(false);
+    pbLeft->setVisible(false);
 
     connect(pbStartListening,SIGNAL(clicked()), this, SLOT(startListening()));
     connect(pbToggleManualAuto,SIGNAL(clicked()),this,SLOT(autoManualButtonClicked()));
@@ -220,6 +227,12 @@ void RemoteWidget::startListening() {
     roboSenderProcess->start(program,arguments);
     //No need for a readyRead() connection on this one due to forwarded channels.
 
+    pbForwards->setVisible(true);
+    pbBackwards->setVisible(true);
+    pbStop->setVisible(true);
+    pbRight->setVisible(true);
+    pbLeft->setVisible(true);
+
     pbToggleManualAuto->setVisible(true);
 
 }
@@ -244,7 +257,7 @@ void RemoteWidget::autoManualButtonClicked()
 
     if (moteIsAutomatic)
     {
-        moteIsAutomatic = !moteIsAutomatic;
+        moteIsAutomatic = false;
 
         commandListToBeSent.append(1); //0 = auto, 1 = manual
         commandListToBeSent.append(254);
@@ -256,7 +269,7 @@ void RemoteWidget::autoManualButtonClicked()
         commandListToBeSent.append(254);
         commandListToBeSent.append(254);
         sendMessage(commandListToBeSent);
-        pbToggleManualAuto->setText("Current: Manual Mode");
+        pbToggleManualAuto->setText("Current: Manual (click to toggle)");
 
         pbForwards->setVisible(true);
         pbBackwards->setVisible(true);
@@ -266,7 +279,7 @@ void RemoteWidget::autoManualButtonClicked()
 
 
     } else {
-        moteIsAutomatic = !moteIsAutomatic;
+        moteIsAutomatic = true;
         commandListToBeSent.append(0); //0 = auto, 1 = manual
         commandListToBeSent.append(254);
         commandListToBeSent.append(254);
@@ -278,7 +291,7 @@ void RemoteWidget::autoManualButtonClicked()
         commandListToBeSent.append(254);
 
         sendMessage(commandListToBeSent);
-        pbToggleManualAuto->setText("Current: Auto Mode");
+        pbToggleManualAuto->setText("Current: Auto (click to toggle)");
 
         pbForwards->setVisible(false);
         pbBackwards->setVisible(false);

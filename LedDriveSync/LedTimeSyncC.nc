@@ -29,7 +29,7 @@ implementation
 {
     uint16_t column;
     uint16_t rowCount;
-    uint32_t  multipleOf600MS;
+    uint32_t  oddOrEvenLED;
 
     #define SAMPLING_FREQUENCY 500
     #define LED_ON 200
@@ -69,7 +69,7 @@ implementation
     //printf("Booted\n");
     //printfflush();
 
-    multipleOf600MS = 1;
+    oddOrEvenLED = 1;
 
     // start radio
     call RadioControl.start();
@@ -78,13 +78,13 @@ implementation
     clockOffset = 0;
 
     // start timer to toggle LEDs every second.
-    call BlinkTimer.startPeriodic(1024);
+    call BlinkTimer.startPeriodic(550);
 
-    if (TOS_NODE_ID==ROOT_ID)
+    /*if (TOS_NODE_ID==ROOT_ID)
     {
       // start timer for time synchronization on root node
       call BoardBlinkTimer.startPeriodic(320);
-    }
+    }*/
 
     column = 0;
     rowCount = 0;
@@ -112,18 +112,24 @@ implementation
     global = local + clockOffset;
 
     // set LEDs to the lower 3 bits of the seconds counter
-    call Leds.set((global >> 10) & (0x07));
+    call Leds.set(1);
+
+    //call Leds.set((global >> 10) & (0x07));
 
     // TODO: calculate time of next event here
 
-    next = global + 1024 - (global % 1024);
+    next = global + 1650 - (global % 1650) + (550*((uint32_t)TOS_NODE_ID-1));
 
     // calculate delta until next event
     delta = next - global;
 
+    call interruptTrigger.clr(); 
+    call interruptTrigger.set();
+
     // start new timer for next event delta milliseconds relative to local
     call BlinkTimer.startOneShotAt(local, delta);
-    printf("Hello\n");
+    call BoardBlinkTimer.startOneShotAt(local,550);
+    //printf("Hello\n");
 
 
 
@@ -160,8 +166,7 @@ implementation
       column = ((TimeSyncMsg*)payload)->column;
       
       updateClockOffset(localTime, globalTime);
-      call BoardBlinkTimer.startPeriodic(320);
-      multipleOf600MS = 1;
+      //call BoardBlinkTimer.startPeriodic(320);
 
     }
 
@@ -175,8 +180,8 @@ implementation
       call Leds.set(1); // sets only red LED
     }
 
-    call BoardBlinkTimer.startPeriodic(320);
-    multipleOf600MS = 1;
+    //call BoardBlinkTimer.startPeriodic(320);
+
   }
 
   event void RadioControl.stopDone(error_t error) {}
@@ -188,22 +193,10 @@ implementation
 
   event void BoardBlinkTimer.fired()
   {
-   //printf("does %d == %d\n",TOS_NODE_ID, (int)multipleOf600MS);
+    call Leds.set(0);
+   //printf("does %d == %d\n",TOS_NODE_ID, (int)oddOrEvenLED);
     //printfflush();
-    if (multipleOf600MS == (uint32_t)TOS_NODE_ID)
-    {
-        call interruptTrigger.clr(); 
-        call interruptTrigger.set();
-        //printf("BITBANGED");
-        //printfflush();
-    }
-
-    if (multipleOf600MS == 3)
-    {
-      multipleOf600MS = 1;
-    } else {
-      multipleOf600MS++;
-    }
+   
 
   }
 }
